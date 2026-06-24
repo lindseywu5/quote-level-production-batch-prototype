@@ -535,38 +535,53 @@ function BatchesSection({
       </ul>
 
       <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-3 py-2 text-[12px]">
-        <div>
-          Batch total: <b>{totalBatchQty}</b> of <b>{draft.qty}</b> units
-          {totalBatchQty === draft.qty ? (
-            <span className="ml-1.5 font-semibold text-emerald-700">
-              ✓ matches total
-            </span>
-          ) : (
-            <span className="ml-1.5 font-semibold text-red-700">
-              ·{" "}
-              {totalBatchQty < draft.qty
-                ? `add ${draft.qty - totalBatchQty} more`
-                : `remove ${totalBatchQty - draft.qty}`}
-            </span>
-          )}
+        <div className="text-slate-700">
+          Batch total:{" "}
+          <b
+            className={
+              totalBatchQty === draft.qty
+                ? "text-emerald-700"
+                : "text-red-700"
+            }
+          >
+            {totalBatchQty}
+          </b>{" "}
+          of <b>{draft.qty}</b> units
         </div>
-        <div>
-          Item price{" "}
-          <b>
-            {usd(
-              draft.batches.reduce(
-                (s, b) => s + priceFor(draft.basePrice, Number(b.qty) || 0),
-                0,
-              ),
-            )}
-          </b>
-        </div>
+        {totalBatchQty !== draft.qty && (
+          <div className="text-[12px] font-semibold text-red-700">
+            {totalBatchQty < draft.qty
+              ? `Add ${draft.qty - totalBatchQty} more`
+              : `Remove ${totalBatchQty - draft.qty}`}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 /* ---------- Single batch row ---------- */
+
+function TrashIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={className}
+    >
+      <path d="M3 6h18" />
+      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+      <line x1="10" y1="11" x2="10" y2="17" />
+      <line x1="14" y1="11" x2="14" y2="17" />
+    </svg>
+  );
+}
 
 function BatchRow({
   index,
@@ -589,8 +604,10 @@ function BatchRow({
   const each = extended / Math.max(1, qty);
 
   return (
-    <li className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-slate-100 px-3 py-2 text-[13px] last:border-b-0">
-      <span className="font-semibold text-slate-800">Batch {index}:</span>
+    <li className="flex flex-nowrap items-center gap-x-2 overflow-hidden border-b border-slate-100 px-3 py-1.5 text-[13px] whitespace-nowrap last:border-b-0">
+      <span className="shrink-0 font-semibold text-slate-800">
+        Batch {index}:
+      </span>
 
       {editing ? (
         <input
@@ -600,13 +617,15 @@ function BatchRow({
           onChange={(e) =>
             onUpdate({ qty: Math.max(0, Number(e.target.value) || 0) })
           }
-          className="h-7 w-16 rounded-md border border-slate-200 px-1.5 text-center"
+          className="h-7 w-14 shrink-0 rounded-md border border-slate-200 px-1.5 text-center"
           aria-label="Batch quantity"
         />
       ) : (
-        <span className="font-semibold text-slate-800">{qty}</span>
+        <span className="shrink-0 font-semibold text-slate-800">{qty}</span>
       )}
-      <span className="text-slate-500">/ out of {totalQty}.</span>
+      <span className="shrink-0 text-slate-500">/ out of {totalQty}</span>
+
+      <span className="mx-1 shrink-0 text-slate-300">·</span>
 
       {editing ? (
         <select
@@ -614,16 +633,16 @@ function BatchRow({
           onChange={(e) =>
             onUpdate({ dueType: e.target.value as Batch["dueType"] })
           }
-          className="h-7 rounded-md border border-slate-200 px-1.5 text-[12px]"
+          className="h-7 shrink-0 rounded-md border border-slate-200 px-1.5 text-[12px]"
         >
-          <option value="ship">Requested Ship by:</option>
-          <option value="delivery">Requested Delivery by:</option>
+          <option value="ship">Requested Ship By</option>
+          <option value="delivery">Requested Delivery By</option>
         </select>
       ) : (
-        <span className="text-slate-700">
+        <span className="shrink-0 text-slate-700">
           {batch.dueType === "ship"
-            ? "Requested Ship by:"
-            : "Requested Delivery by:"}
+            ? "Requested Ship By"
+            : "Requested Delivery By"}
         </span>
       )}
 
@@ -632,43 +651,45 @@ function BatchRow({
           type="date"
           value={batch.dueDate}
           onChange={(e) => onUpdate({ dueDate: e.target.value })}
-          className="h-7 rounded-md border border-slate-200 px-1.5"
+          className="h-7 shrink-0 rounded-md border border-slate-200 px-1.5"
         />
       ) : (
-        <span className="font-semibold text-slate-800">{fmtDate(batch.dueDate)}</span>
+        <span className="shrink-0 font-semibold text-slate-800">
+          {fmtDate(batch.dueDate)}
+        </span>
       )}
 
-      <span className="text-slate-400">·</span>
+      <span className="mx-1 shrink-0 text-slate-300">·</span>
 
-      <span className="text-slate-700">
+      <span className="shrink-0 text-slate-700">
         <b>{usd(extended)}</b>{" "}
         <span className="text-slate-500">({usd(each)}/ea)</span>
       </span>
 
-      <span className="flex-1" />
+      <span className="min-w-2 flex-1" />
 
       {editing ? (
         <button
           onClick={() => onUpdate({ editing: false })}
-          className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] hover:border-slate-300"
+          className="shrink-0 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] hover:border-slate-300"
         >
           Done
         </button>
       ) : (
         <button
           onClick={() => onUpdate({ editing: true })}
-          className="rounded-md px-2 py-1 text-[11px] text-blue-600 hover:underline"
+          className="shrink-0 rounded-md px-2 py-1 text-[11px] font-medium text-blue-600 hover:underline"
         >
           Edit
         </button>
       )}
       <button
         onClick={onRemove}
-        className="rounded-md p-1 text-slate-500 hover:bg-red-50 hover:text-red-600"
-        aria-label="Delete batch"
+        className="inline-flex shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white p-1.5 text-slate-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+        aria-label={`Delete batch ${index}`}
         title="Delete batch"
       >
-        🗑
+        <TrashIcon />
       </button>
     </li>
   );
