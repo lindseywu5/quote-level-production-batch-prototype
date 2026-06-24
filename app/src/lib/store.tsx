@@ -25,7 +25,7 @@ const initialItems: Item[] = [
     thumbBg: "from-slate-200 to-slate-300",
     batches: [
       { id: "b1a", qty: 18, dueDate: "2026-07-22", dueType: "ship" },
-      { id: "b1b", qty: 12, dueDate: "2026-07-15", dueType: "delivery" },
+      { id: "b1b", qty: 12, dueDate: "2026-07-15", dueType: "ship" },
     ],
   },
   {
@@ -66,7 +66,7 @@ interface Ctx {
 }
 
 const QuoteCtx = createContext<Ctx | null>(null);
-const STORAGE_KEY = "quote-batches-prototype-v2";
+const STORAGE_KEY = "quote-batches-prototype-mvp-v1";
 
 export function QuoteProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<Item[]>(initialItems);

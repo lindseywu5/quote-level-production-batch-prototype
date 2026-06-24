@@ -199,9 +199,7 @@ function ItemCard({
               title={sortedBatches
                 .map(
                   (b, i) =>
-                    `Batch ${i + 1}: ${b.qty} units · ${
-                      b.dueType === "ship" ? "Ship By" : "Deliver By"
-                    } ${fmtDate(b.dueDate)}`,
+                    `Batch ${i + 1}: ${b.qty} units · Ship By ${fmtDate(b.dueDate)}`,
                 )
                 .join("\n")}
             >

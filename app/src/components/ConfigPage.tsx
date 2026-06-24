@@ -557,8 +557,8 @@ function BatchesSection({
         </button>
         <Tip>
           A <b>production batch</b> is a portion of this item&apos;s total quantity
-          with its own requested ship or delivery date. Useful when you need part of
-          the order earlier.
+          with its own requested ship date. Useful when you need part of the order
+          earlier.
         </Tip>
       </div>
     );
@@ -578,13 +578,12 @@ function BatchesSection({
           </span>
           <Tip>
             Need part of your order earlier? Split this item&apos;s total quantity
-            into <b>production batches</b>, each with its own requested ship or
-            delivery date.
+            into <b>production batches</b>, each with its own requested ship date
+            (the day it leaves the factory).
             <br />
             <br />
-            <b>Ship date</b> = the day it leaves the factory.
-            <br />
-            <b>Delivery date</b> = the day it arrives at you.
+            Coming soon: schedule batches by <b>delivery date</b> (the day they
+            arrive at you).
           </Tip>
           <span className="ml-2 text-[12px] text-slate-500">
             {draft.batches.length}/100
@@ -706,24 +705,7 @@ function BatchRow({
 
       <span className="mx-1 shrink-0 text-slate-300">·</span>
 
-      {editing ? (
-        <select
-          value={batch.dueType}
-          onChange={(e) =>
-            onUpdate({ dueType: e.target.value as Batch["dueType"] })
-          }
-          className="h-7 shrink-0 rounded-md border border-slate-200 px-1.5 text-[12px]"
-        >
-          <option value="ship">Requested Ship By</option>
-          <option value="delivery">Requested Deliver By</option>
-        </select>
-      ) : (
-        <span className="shrink-0 text-slate-700">
-          {batch.dueType === "ship"
-            ? "Requested Ship By"
-            : "Requested Deliver By"}
-        </span>
-      )}
+      <span className="shrink-0 text-slate-700">Requested Ship By</span>
 
       {editing ? (
         <input
