@@ -2,14 +2,12 @@
 
 Clickable Next.js prototype exploring how to express **production batches** at the line-item level of a Xometry quote — letting customers split a total quantity into smaller portions, each with its own requested ship or delivery date.
 
-## Live versions
+- **Live:** https://quote-batches.vercel.app
+- **Repo:** https://github.com/lindseywu5/quote-level-production-batch-prototype
 
-| Build | URL | Branch | Description |
-| --- | --- | --- | --- |
-| **Full** — Ship + Deliver dates | https://quote-batches.vercel.app | `main` | Customers can pick either *Requested Ship By* or *Requested Deliver By* per batch. Tagged `v1-ship-and-deliver`. |
-| **MVP** — Ship date only | https://quote-batches-mvp.vercel.app | `ship-by-only` | Due-date type is locked to *Requested Ship By* and the selector is hidden. The data model still carries `dueType: "ship" \| "delivery"` for the future delivery-date capability. |
+The active build is the **ship-date-only MVP**: every batch's due-date type is locked to *Requested Ship By* and the selector is hidden. The data model still carries `dueType: "ship" | "delivery"` so the future delivery-date capability (Amazon-retail-style scheduling) can light up without a migration.
 
-Repo: https://github.com/lindseywu5/quote-level-production-batch-prototype
+The previous *Ship + Deliver* version is preserved as git tag `v1-ship-and-deliver` and branch `ship-by-only` is kept as a snapshot of the same state.
 
 ## Run locally
 
