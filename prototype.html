@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Quote Production Batches — Prototype</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  :root{
+    --blue:#1565ff; --blue-dark:#0a47c2; --ink:#1a2233; --ink-2:#465064;
+    --muted:#6b7689; --line:#e3e7ef; --bg:#f6f8fb; --green:#1f7a3a; --warn:#b25b00;
+    --red:#c0392b; --chip:#eef3ff; --soft:#f1f5ff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  a{color:var(--blue);text-decoration:none;cursor:pointer}
+  a:hover{text-decoration:underline}
+  .top{background:#1565ff;color:#fff;text-align:center;padding:6px;font-size:12px}
+  .nav{background:#fff;border-bottom:1px solid var(--line);padding:10px 24px;display:flex;align-items:center;gap:20px}
+  .nav .logo{font-weight:800;letter-spacing:.3px}
+  .nav .spacer{flex:1}
+  .nav a{color:#324; font-size:13px}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:6px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;font-size:13px}
+  .btn:hover{border-color:#c9d2e2}
+  .btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .btn.primary:hover{background:var(--blue-dark)}
+  .btn.ghost{background:transparent;border-color:transparent;color:var(--blue)}
+  .btn.danger{color:var(--red);border-color:#f1c7c2;background:#fff}
+  .btn.sm{padding:4px 8px;font-size:12px}
+  .container{max-width:1180px;margin:18px auto;padding:0 16px;display:grid;grid-template-columns:1fr 320px;gap:16px}
+  .container.single{grid-template-columns:1fr}
+  .card{background:#fff;border:1px solid var(--line);border-radius:8px}
+  .crumbs{font-size:12px;color:var(--muted);margin-bottom:6px}
+  .h1{font-size:22px;font-weight:700;margin:0}
+  .row{display:flex;align-items:center;gap:10px}
+  .item{border-bottom:1px solid var(--line);padding:14px}
+  .item:last-child{border-bottom:none}
+  .item-head{display:flex;align-items:flex-start;gap:12px}
+  .thumb{width:64px;height:64px;border-radius:6px;background:#eef2f7;display:flex;align-items:center;justify-content:center;color:#8a93a6;font-size:11px;flex-shrink:0;border:1px solid var(--line)}
+  .item-title{font-weight:600;color:var(--blue)}
+  .item-meta{color:var(--muted);font-size:12px;margin-top:2px}
+  .pill{display:inline-block;font-size:11px;background:var(--chip);color:var(--blue);padding:2px 6px;border-radius:4px;margin-left:6px}
+  .specs{display:grid;grid-template-columns:1fr 1fr;gap:6px 22px;margin-top:8px;font-size:12px;color:var(--ink-2)}
+  .specs b{color:var(--ink);font-weight:600}
+  .price-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+  .price-card{border:1px solid var(--line);border-radius:6px;padding:10px;cursor:pointer;background:#fff}
+  .price-card .label{font-size:11px;color:var(--muted)}
+  .price-card .lead{font-size:12px;color:var(--ink-2);margin:2px 0 6px}
+  .price-card .price{font-size:18px;font-weight:700}
+  .price-card .strike{font-size:11px;color:var(--muted);text-decoration:line-through;margin-left:6px}
+  .price-card.selected{border-color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue);background:#f8fbff}
+  .lead-tag{font-size:11px;color:var(--green);font-weight:600}
+  .lead-tag.fast{color:#7a3acc}
+  .qty{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .qty button{background:#fff;border:0;width:26px;height:26px;cursor:pointer;font-size:14px}
+  .qty input{width:46px;border:0;text-align:center;height:26px;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+  .sidebar h4{margin:0 0 8px 0;font-size:13px;color:var(--muted);font-weight:600}
+  .sidebar .pcard{padding:14px;border-bottom:1px solid var(--line)}
+  .sidebar .pcard:last-child{border-bottom:none}
+  .small{font-size:12px;color:var(--muted)}
+  .alert{background:#fff7e6;border:1px solid #ffe2a8;color:#7a4b00;padding:8px 10px;border-radius:6px;font-size:12px;margin:10px 14px}
+  .alert.info{background:#eef5ff;border-color:#cfe0ff;color:#143e8a}
+  .alert.bad{background:#fdeceb;border-color:#f3c5c0;color:#8a1d14}
+  .alert.ok{background:#eaf7ee;border-color:#bfe3c8;color:#175c2c}
+
+  /* Batches */
+  .batches{margin-top:10px;border:1px dashed var(--line);border-radius:8px;background:#fbfcfe}
+  .batches-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--line)}
+  .batches-head .title{font-weight:600}
+  .batch-row{display:grid;grid-template-columns:120px 1fr 170px 110px 80px;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid #eef1f7;font-size:12px}
+  .batch-row:last-child{border-bottom:none}
+  .batch-row .due{color:var(--muted)}
+  .batch-row.editing input,.batch-row.editing select{height:30px;border:1px solid var(--line);border-radius:6px;padding:0 8px;font-size:12px;background:#fff}
+  .batch-row input[type="number"]{width:80px}
+  .batch-row input[type="date"]{width:150px}
+  .batch-progress{display:flex;align-items:center;gap:8px}
+  .bar{height:6px;background:#eef2f8;border-radius:99px;flex:1;overflow:hidden}
+  .bar > i{display:block;height:100%;background:var(--blue);border-radius:99px}
+  .tip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e8edf5;color:#516079;font-size:10px;font-weight:700;cursor:help;margin-left:6px}
+  .tip:hover .tipbox{display:block}
+  .tipbox{display:none;position:absolute;left:50%;transform:translateX(-50%);top:22px;width:260px;background:#1a2233;color:#fff;padding:8px 10px;border-radius:6px;font-size:11.5px;line-height:1.4;z-index:10;font-weight:400}
+  .tipbox::before{content:"";position:absolute;top:-5px;left:50%;transform:translateX(-50%);border:5px solid transparent;border-bottom-color:#1a2233;border-top:none}
+
+  .summary-row{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#f6f8fb;border-top:1px solid var(--line);font-size:12px}
+  .summary-row .ok{color:var(--green);font-weight:600}
+  .summary-row .bad{color:var(--red);font-weight:600}
+
+  /* Config page */
+  .config-grid{display:grid;grid-template-columns:1fr 320px;gap:16px}
+  .config-main{padding:16px}
+  .field{margin:10px 0}
+  .field label{display:block;font-size:12px;color:var(--ink-2);font-weight:600;margin-bottom:4px}
+  .field input,.field select{height:32px;border:1px solid var(--line);border-radius:6px;padding:0 8px;font-size:13px;background:#fff;width:100%}
+  .field.inline{display:flex;align-items:center;gap:10px}
+  .badge{display:inline-block;background:#fff3cd;color:#7a5b00;border-radius:4px;padding:2px 6px;font-size:11px;font-weight:600;margin-left:6px}
+  .config-head{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
+  .config-head .title{font-weight:700;font-size:15px}
+  .totals{display:flex;flex-wrap:wrap;gap:18px;align-items:center;padding:10px 16px;background:#f8fafc;border-bottom:1px solid var(--line)}
+  .totals .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .totals .v{font-size:16px;font-weight:700}
+  .totals .pricebox{display:flex;align-items:center;gap:6px}
+  .savings{color:var(--green);font-size:12px;font-weight:600}
+  .surcharge{color:#7a4b00;font-size:12px;font-weight:600}
+
+  .toggle{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--ink-2)}
+  .switch{width:30px;height:18px;background:#cfd6e3;border-radius:99px;position:relative;transition:.15s}
+  .switch::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;background:#fff;border-radius:50%;transition:.15s}
+  .switch.on{background:var(--blue)}
+  .switch.on::after{left:14px}
+
+  @media (max-width: 980px){
+    .container{grid-template-columns:1fr}
+    .config-grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-type="module">
+const {useState, useMemo, useEffect} = React;
+
+/* ---------- Pricing model (non-linear, economies of scale) ----------
+   unitPrice(q) = base * (a + b / q^k)  -- diminishing per-unit cost
+   total(q)     = unitPrice(q) * q
+------------------------------------------------------------------- */
+function unitPrice(base, q){
+  if(q<=0) return 0;
+  // tuned so q=1 ~ 1.9x base, q=10 ~ 1.25x base, q=30 ~ 1.0x base, q=100 ~ 0.85x base
+  const a = 0.82, b = 1.10, k = 0.45;
+  return base * (a + b / Math.pow(q, k));
+}
+function priceFor(base, q){ return unitPrice(base, q) * q; }
+const usd = n => n.toLocaleString("en-US",{style:"currency",currency:"USD"});
+const fmtDate = iso => {
+  if(!iso) return "—";
+  const d = new Date(iso+"T00:00:00");
+  return d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+};
+const today = new Date();
+const addDays = (d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x.toISOString().slice(0,10)};
+
+/* ---------- Demo data ---------- */
+const initialItems = [
+  {
+    id:"i1", name:"Enclosure Body.STEP", version:"v1", process:"CNC Machining",
+    material:"Aluminum 6061-T6 (Best Available)", finish:"Standard", inspection:"Standard Inspection",
+    qty:10, basePrice:55, leadTime:"Standard",
+    batches:[],
+  },
+  {
+    id:"i2", name:"Fly Wheel.step", version:"v1", process:"CNC Machining",
+    material:"Aluminum 6061-T6 (Best Available)", finish:"Standard", inspection:"Standard Inspection",
+    qty:10, basePrice:27, leadTime:"Standard", batches:[],
+  },
+  {
+    id:"i3", name:"Mill Sample Part.step", version:"v1", process:"CNC Machining",
+    material:"Aluminum 6061-T6 (Best Available)", finish:"Standard", inspection:"Standard Inspection",
+    qty:10, basePrice:22, leadTime:"Standard", batches:[],
+  },
+];
+
+/* ---------- Helpers for batches ---------- */
+function itemQty(item){
+  return item.batches.length
+    ? item.batches.reduce((s,b)=>s+(+b.qty||0),0)
+    : item.qty;
+}
+function itemPrice(item){
+  if(item.batches.length===0) return priceFor(item.basePrice, item.qty);
+  return item.batches.reduce((s,b)=> s + priceFor(item.basePrice, +b.qty||0), 0);
+}
+function unbatchedPriceAtTotal(item){
+  return priceFor(item.basePrice, itemQty(item));
+}
+function sortBatches(batches){
+  return [...batches].sort((a,b)=>(a.dueDate||"").localeCompare(b.dueDate||""));
+}
+
+/* ---------- Tooltip ---------- */
+function Tip({children}){
+  return <span className="tip">i<span className="tipbox">{children}</span></span>;
+}
+
+/* ---------- Quote Summary Page ---------- */
+function QuoteSummary({items, setItems, onOpenItem}){
+  const quoteTotal = items.reduce((s,it)=> s + itemPrice(it), 0);
+  return (
+    <div className="container">
+      <div>
+        <div className="crumbs"><a>Dashboard</a> / <a>Quotes</a> / Q85-0387-8659</div>
+        <div className="row" style={{justifyContent:"space-between",marginBottom:10}}>
+          <h1 className="h1">Q85-0387-8659</h1>
+          <div className="row">
+            <button className="btn">+ Add Certifications</button>
+            <button className="btn">Download</button>
+            <button className="btn">Share</button>
+          </div>
+        </div>
+
+        <div className="card">
+          {items.map((it,idx)=>(
+            <div className="item" key={it.id}>
+              <div className="item-head">
+                <div className="thumb">CAD</div>
+                <div style={{flex:1}}>
+                  <div className="row" style={{justifyContent:"space-between"}}>
+                    <div>
+                      <a className="item-title" onClick={()=>onOpenItem(it.id)}>{it.name}</a>
+                      <span className="pill">{it.version}</span>
+                    </div>
+                    <div className="row">
+                      <span className="small">Quantity</span>
+                      <div className="qty">
+                        <button onClick={()=>setItems(items.map(x=>x.id===it.id?{...x, qty:Math.max(1,(x.batches.length?itemQty(x):x.qty)-1), batches: x.batches.length?[]:x.batches}:x))}>−</button>
+                        <input value={itemQty(it)} readOnly />
+                        <button onClick={()=>setItems(items.map(x=>x.id===it.id?{...x, qty:(x.batches.length?itemQty(x):x.qty)+1, batches: x.batches.length?[]:x.batches}:x))}>+</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="row" style={{marginTop:8,gap:14}}>
+                    <button className="btn sm" onClick={()=>onOpenItem(it.id)}>✎ Edit Configuration</button>
+                    <span className="small">Process: <b>{it.process}</b></span>
+                    <span className="small">Material: <b>{it.material}</b></span>
+                  </div>
+
+                  {/* Production batches summary */}
+                  <BatchesInline item={it} onChange={ni=>setItems(items.map(x=>x.id===it.id?ni:x))} onOpen={()=>onOpenItem(it.id)} />
+
+                  {/* Price options */}
+                  <div className="price-grid">
+                    {[
+                      {key:"Economy", lead:"Arrives Jul 14", tag:"$ Least Expensive", mult:0.55, leadMult:1},
+                      {key:"Standard", lead:"Arrives Jul 16", tag:"", mult:1, leadMult:1, selected:true},
+                      {key:"Fastest", lead:"Arrives Jul 8", tag:"⚡ Fastest", tagClass:"fast", mult:1.75, leadMult:1},
+                    ].map(opt=>{
+                      const p = itemPrice(it)*opt.mult;
+                      const strike = p*1.35;
+                      return (
+                        <div key={opt.key} className={"price-card"+(opt.selected?" selected":"")}>
+                          {opt.tag && <div className={"lead-tag "+(opt.tagClass||"")}>{opt.tag}</div>}
+                          <div className="lead">{opt.lead}</div>
+                          <div className="price">{usd(p)} <span className="strike">{usd(strike)}</span></div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <aside>
+        <div className="card sidebar">
+          <div className="pcard">
+            <h4>Manufacturing Origin</h4>
+            <select className="btn" style={{width:"100%"}}><option>Global</option></select>
+          </div>
+          <div className="pcard">
+            <div className="lead-tag">$ Least Expensive</div>
+            <div className="small">Arrives Jul 14</div>
+            <div style={{fontSize:22,fontWeight:700}}>{usd(items.reduce((s,it)=>s+itemPrice(it)*0.55,0))}</div>
+          </div>
+          <div className="pcard" style={{background:"#f8fbff",borderLeft:"3px solid var(--blue)"}}>
+            <div className="small">Arrives Jul 16</div>
+            <div style={{fontSize:22,fontWeight:700}}>{usd(quoteTotal)}</div>
+          </div>
+          <div className="pcard">
+            <div className="lead-tag fast">⚡ Fastest</div>
+            <div className="small">Arrives Jul 8</div>
+            <div style={{fontSize:22,fontWeight:700}}>{usd(quoteTotal*1.75)}</div>
+          </div>
+          <div className="pcard">
+            <button className="btn primary" style={{width:"100%",justifyContent:"center"}}>Continue to Checkout</button>
+            <button className="btn" style={{width:"100%",justifyContent:"center",marginTop:8}}>Forward to Purchaser</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  );
+}
+
+/* ---------- Inline batches strip (on summary card) ---------- */
+function BatchesInline({item, onChange, onOpen}){
+  const sorted = sortBatches(item.batches);
+  if(sorted.length===0){
+    return (
+      <div className="alert info" style={{margin:"10px 0"}}>
+        Need different dates for different quantities?{" "}
+        <a onClick={onOpen}>Split into production batches</a>
+        <Tip>A <b>production batch</b> is a portion of this item's total quantity with its own requested ship or delivery date. Useful when you need part of the order earlier.</Tip>
+      </div>
+    );
+  }
+  return (
+    <div style={{margin:"10px 0",background:"#f8fbff",border:"1px solid #cfe0ff",borderRadius:6,padding:"8px 10px"}}>
+      <div className="row" style={{justifyContent:"space-between"}}>
+        <div style={{fontWeight:600,fontSize:12,color:"#143e8a"}}>
+          {sorted.length} production batch{sorted.length>1?"es":""} — {itemQty(item)} units total
+        </div>
+        <a onClick={onOpen} style={{fontSize:12}}>Manage</a>
+      </div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:6,marginTop:6}}>
+        {sorted.map((b,i)=>(
+          <span key={b.id} className="pill" style={{background:"#fff",border:"1px solid #cfe0ff",color:"#143e8a"}}>
+            {b.qty} units · {b.dueType==="ship"?"Ship by":"Deliver by"} {fmtDate(b.dueDate)}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Config Page ---------- */
+function ConfigPage({item, onBack, onSave, onChange}){
+  const [draft, setDraft] = useState(item);
+  useEffect(()=>setDraft(item),[item.id]);
+
+  const totalBatchQty = draft.batches.reduce((s,b)=>s+(+b.qty||0),0);
+  const headerQty = draft.batches.length ? totalBatchQty : draft.qty;
+  const valid =
+    draft.batches.length===0 ||
+    (totalBatchQty===draft.qty && draft.batches.every(b=>b.qty>0 && b.dueDate));
+
+  const total = draft.batches.length
+    ? draft.batches.reduce((s,b)=>s+priceFor(draft.basePrice,+b.qty||0),0)
+    : priceFor(draft.basePrice, draft.qty);
+  const unbatched = priceFor(draft.basePrice, draft.qty);
+  const diff = total - unbatched;
+
+  const addBatch = ()=>{
+    const remaining = Math.max(1, draft.qty - totalBatchQty);
+    const newBatch = {
+      id: "b"+Math.random().toString(36).slice(2,7),
+      qty: remaining,
+      dueDate: addDays(today, 21 + draft.batches.length*7),
+      dueType: "ship",
+      editing: true,
+    };
+    setDraft({...draft, batches:[...draft.batches, newBatch]});
+  };
+  const updateBatch = (id, patch)=>{
+    setDraft({...draft, batches: draft.batches.map(b=>b.id===id?{...b,...patch}:b)});
+  };
+  const removeBatch = id=>{
+    setDraft({...draft, batches: draft.batches.filter(b=>b.id!==id)});
+  };
+
+  // live-propagate back so summary page reflects edits
+  useEffect(()=>{ onChange(draft); }, [draft]);
+
+  return (
+    <div className="container single">
+      <div className="row" style={{justifyContent:"space-between"}}>
+        <div className="row">
+          <button className="btn" onClick={onBack}>← Back to quote</button>
+          <div className="crumbs" style={{margin:0}}>Quote Q85-0387-8659 / Configure</div>
+        </div>
+        <div className="row">
+          <button className="btn" onClick={onBack}>Cancel</button>
+          <button className="btn primary" disabled={!valid} onClick={()=>onSave(draft)}>Save Configuration</button>
+        </div>
+      </div>
+
+      <div className="card" style={{marginTop:10}}>
+        <div className="config-head">
+          <div className="thumb">CAD</div>
+          <div>
+            <div className="title">{draft.name} <span className="pill">{draft.version}</span></div>
+            <div className="small">{draft.process} · {draft.material}</div>
+          </div>
+        </div>
+
+        <div className="totals">
+          <div><div className="k">Total Quantity</div><div className="v">{headerQty} units</div></div>
+          <div>
+            <div className="k">Item Price <Tip>This is the price for this item across all of its production batches. As you split into batches, the per-unit price for each batch is calculated based on that batch's size — smaller batches naturally cost a little more per unit, because larger runs share setup costs across more parts.</Tip></div>
+            <div className="v pricebox">{usd(total)}
+              {draft.batches.length>0 && Math.abs(diff)>0.5 && (
+                diff>0
+                  ? <span className="surcharge">+{usd(diff)} vs. single run</span>
+                  : <span className="savings">−{usd(-diff)} vs. single run</span>
+              )}
+            </div>
+          </div>
+          <div><div className="k">Unit Price (avg)</div><div className="v">{usd(total / Math.max(1,headerQty))}</div></div>
+        </div>
+
+        {draft.batches.length>0 && (
+          diff>0
+            ? <div className="alert">
+                <b>Heads up:</b> Splitting into smaller batches changes per-unit pricing slightly. Each batch is priced on its own quantity, so smaller batches don't get the same volume efficiency a single larger run would. We'll always show you exactly what each batch costs so there are no surprises.
+              </div>
+            : <div className="alert ok">
+                Your batch sizes still qualify for great per-unit pricing. We've priced each batch individually using our standard volume tiers.
+              </div>
+        )}
+
+        <div className="config-main">
+          <div className="row" style={{gap:24,flexWrap:"wrap"}}>
+            <div className="field" style={{width:140}}>
+              <label>Quantity <Tip>The total number of units you want manufactured for this item. If you add production batches below, they must sum to this number.</Tip></label>
+              <input type="number" min="1" value={draft.qty}
+                onChange={e=>setDraft({...draft, qty:Math.max(1,+e.target.value||1)})}/>
+            </div>
+            <div className="field" style={{width:260}}>
+              <label>Process</label>
+              <input value={draft.process} readOnly />
+            </div>
+            <div className="field" style={{width:320}}>
+              <label>Material</label>
+              <input value={draft.material} readOnly />
+            </div>
+          </div>
+
+          {/* Production batches */}
+          <div className="batches">
+            <div className="batches-head">
+              <div>
+                <span className="title">Production Batches</span>
+                <Tip>
+                  Need part of your order earlier? Split this item's total quantity into <b>production batches</b>, each with its own requested ship or delivery date.
+                  <br/><br/><b>Ship date</b> = the day it leaves the factory.<br/><b>Delivery date</b> = the day it arrives at you.
+                </Tip>
+                <span className="small" style={{marginLeft:8}}>
+                  {draft.batches.length}/100 batches · sorted by earliest due date
+                </span>
+              </div>
+              <button className="btn sm primary" onClick={addBatch} disabled={draft.batches.length>=100}>+ Add Batch</button>
+            </div>
+
+            {draft.batches.length===0 && (
+              <div style={{padding:"16px",color:"var(--muted)",fontSize:12,textAlign:"center"}}>
+                No batches yet. Your full quantity of <b>{draft.qty}</b> will ship together.
+                <div style={{marginTop:6}}><a onClick={addBatch}>+ Add your first production batch</a></div>
+              </div>
+            )}
+
+            {sortBatches(draft.batches).map((b,idx)=>{
+              const editing = !!b.editing;
+              const pct = draft.qty ? Math.min(100, (b.qty/draft.qty)*100) : 0;
+              const batchPrice = priceFor(draft.basePrice, +b.qty||0);
+              return (
+                <div key={b.id} className={"batch-row"+(editing?" editing":"")}>
+                  <div>
+                    <div className="small">Batch {idx+1}</div>
+                    {editing
+                      ? <input type="number" min="1" value={b.qty}
+                          onChange={e=>updateBatch(b.id,{qty:Math.max(0,+e.target.value||0)})}/>
+                      : <div><b>{b.qty}</b> units</div>}
+                  </div>
+                  <div className="batch-progress">
+                    <div className="bar"><i style={{width:pct+"%"}}/></div>
+                    <span className="small">{usd(batchPrice)} ({usd(batchPrice/Math.max(1,+b.qty||1))}/ea)</span>
+                  </div>
+                  <div>
+                    {editing
+                      ? <input type="date" value={b.dueDate} onChange={e=>updateBatch(b.id,{dueDate:e.target.value})}/>
+                      : <div className="due">{fmtDate(b.dueDate)}</div>}
+                  </div>
+                  <div>
+                    {editing
+                      ? <select value={b.dueType} onChange={e=>updateBatch(b.id,{dueType:e.target.value})}>
+                          <option value="ship">Ship date</option>
+                          <option value="delivery">Delivery date</option>
+                        </select>
+                      : <span className="small">{b.dueType==="ship"?"Requested ship":"Requested delivery"}</span>}
+                  </div>
+                  <div className="row" style={{justifyContent:"flex-end"}}>
+                    {editing
+                      ? <button className="btn sm" onClick={()=>updateBatch(b.id,{editing:false})}>Done</button>
+                      : <button className="btn sm ghost" onClick={()=>updateBatch(b.id,{editing:true})}>Edit</button>}
+                    <button className="btn sm danger" onClick={()=>removeBatch(b.id)}>×</button>
+                  </div>
+                </div>
+              );
+            })}
+
+            {draft.batches.length>0 && (
+              <div className="summary-row">
+                <div>
+                  Batch total: <b>{totalBatchQty}</b> of <b>{draft.qty}</b> units
+                  {totalBatchQty===draft.qty
+                    ? <span className="ok"> ✓ matches total</span>
+                    : <span className="bad"> · {totalBatchQty<draft.qty?`add ${draft.qty-totalBatchQty} more`:`remove ${totalBatchQty-draft.qty}`}</span>}
+                </div>
+                <div>Item price <b>{usd(total)}</b></div>
+              </div>
+            )}
+          </div>
+
+          <div style={{marginTop:14}} className="small">
+            <b>About batch pricing.</b> Each production batch is priced on its own quantity, using the same volume tiers as the rest of your quote. Bigger batches typically have a lower per-unit price because setup, programming and inspection costs are shared across more parts. You'll always see the exact price per batch before checkout.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- App ---------- */
+function App(){
+  const [items, setItems] = useState(initialItems);
+  const [openId, setOpenId] = useState(null);
+  const openItem = items.find(i=>i.id===openId);
+
+  return (
+    <div>
+      <div className="top">Prototype · Quote-level Production Batches</div>
+      <div className="nav">
+        <div className="logo">Xometry</div>
+        <div className="spacer"/>
+        <a>Dashboard</a><a>Quotes</a><a>Orders</a><a>My Account ▾</a>
+        <button className="btn primary">Start a New Quote</button>
+      </div>
+
+      {!openItem
+        ? <QuoteSummary items={items} setItems={setItems} onOpenItem={setOpenId}/>
+        : <ConfigPage
+            item={openItem}
+            onBack={()=>setOpenId(null)}
+            onSave={d=>{
+              const cleaned = {...d, batches: d.batches.map(b=>({...b, editing:false}))};
+              setItems(items.map(x=>x.id===d.id?cleaned:x));
+              setOpenId(null);
+            }}
+            onChange={d=>setItems(items.map(x=>x.id===d.id?d:x))}
+          />
+      }
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
