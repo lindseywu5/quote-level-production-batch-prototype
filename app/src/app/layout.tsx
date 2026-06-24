@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { TopBar } from "@/components/TopBar";
+import { ResetButton } from "@/components/ResetButton";
 import { QuoteProvider } from "@/lib/store";
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ export default function RootLayout({
         <QuoteProvider>
           <TopBar />
           {children}
+          <ResetButton />
         </QuoteProvider>
       </body>
     </html>
