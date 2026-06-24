@@ -715,13 +715,13 @@ function BatchRow({
           className="h-7 shrink-0 rounded-md border border-slate-200 px-1.5 text-[12px]"
         >
           <option value="ship">Requested Ship By</option>
-          <option value="delivery">Requested Delivery By</option>
+          <option value="delivery">Requested Deliver By</option>
         </select>
       ) : (
         <span className="shrink-0 text-slate-700">
           {batch.dueType === "ship"
             ? "Requested Ship By"
-            : "Requested Delivery By"}
+            : "Requested Deliver By"}
         </span>
       )}
 

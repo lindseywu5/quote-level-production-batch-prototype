@@ -200,7 +200,7 @@ function ItemCard({
                 .map(
                   (b, i) =>
                     `Batch ${i + 1}: ${b.qty} units · ${
-                      b.dueType === "ship" ? "Ship by" : "Deliver by"
+                      b.dueType === "ship" ? "Ship By" : "Deliver By"
                     } ${fmtDate(b.dueDate)}`,
                 )
                 .join("\n")}
