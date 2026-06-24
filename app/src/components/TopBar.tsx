@@ -4,7 +4,10 @@ export function TopBar() {
   return (
     <>
       <div className="bg-blue-600 py-1.5 text-center text-xs text-white">
-        Prototype · Quote-level Production Batches
+        Prototype · Quote-level Production Batches{" "}
+        <span className="ml-1 rounded bg-white/15 px-1.5 py-[1px] text-[10px] font-semibold uppercase tracking-wide">
+          MVP · Ship date only
+        </span>
       </div>
       <header className="flex items-center gap-5 border-b border-slate-200 bg-white px-6 py-2.5">
         <Link
