@@ -22,6 +22,7 @@ export function ConfigPage({ itemId }: { itemId: string }) {
   const item = items.find((x) => x.id === itemId);
   const [draft, setDraft] = useState<Item | null>(item ?? null);
   const [showDiscounts, setShowDiscounts] = useState(false);
+  const [showErrors, setShowErrors] = useState(false);
 
   useEffect(() => {
     if (item) setDraft(item);
@@ -81,6 +82,15 @@ export function ConfigPage({ itemId }: { itemId: string }) {
   }, [draft]);
 
   const save = () => {
+    if (!valid) {
+      setShowErrors(true);
+      if (typeof window !== "undefined") {
+        document
+          .getElementById("total-qty-card")
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      return;
+    }
     const cleaned: Item = {
       ...draft,
       batches: draft.batches.map((b) => ({ ...b, editing: false })),
@@ -88,6 +98,14 @@ export function ConfigPage({ itemId }: { itemId: string }) {
     replaceItem(cleaned);
     router.push("/");
   };
+
+  // Clear errors as soon as the user fixes the mismatch
+  useEffect(() => {
+    if (valid && showErrors) setShowErrors(false);
+  }, [valid, showErrors]);
+
+  const mismatch = hasBatches && totalBatchQty !== draft.qty;
+  const errorVisible = showErrors && mismatch;
 
   return (
     <>
@@ -128,8 +146,7 @@ export function ConfigPage({ itemId }: { itemId: string }) {
           <Link href="/" className="btn">Cancel</Link>
           <button
             onClick={save}
-            disabled={!valid}
-            className="rounded-md bg-blue-600 px-3 py-1.5 text-[13px] font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-md bg-blue-600 px-3 py-1.5 text-[13px] font-semibold text-white hover:bg-blue-700"
           >
             Save Configuration
           </button>
@@ -226,7 +243,15 @@ export function ConfigPage({ itemId }: { itemId: string }) {
 
             <div className="space-y-4 p-4">
               {/* Total Quantity + Production Batches (now contextually grouped) */}
-              <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-3">
+              <div
+                id="total-qty-card"
+                className={
+                  "rounded-lg border bg-slate-50/60 p-3 transition-colors " +
+                  (errorVisible
+                    ? "border-red-400 ring-1 ring-red-300"
+                    : "border-slate-200")
+                }
+              >
                 <div className="flex items-end gap-3">
                   <div>
                     <div className="mb-1 text-[12px] font-semibold text-slate-700">
@@ -241,14 +266,20 @@ export function ConfigPage({ itemId }: { itemId: string }) {
                       type="number"
                       min={1}
                       value={draft.qty}
-                      disabled={hasBatches}
                       onChange={(e) =>
                         setDraft({
                           ...draft,
                           qty: Math.max(1, Number(e.target.value) || 1),
                         })
                       }
-                      className="h-9 w-28 rounded-md border border-slate-200 px-2 text-[14px] disabled:bg-slate-100 disabled:text-slate-500"
+                      className={
+                        "h-9 w-28 rounded-md border bg-white px-2 text-[14px] " +
+                        (errorVisible
+                          ? "border-red-400 focus:outline-red-500"
+                          : "border-slate-200")
+                      }
+                      aria-invalid={errorVisible}
+                      aria-describedby={errorVisible ? "qty-error" : undefined}
                     />
                   </div>
                   <button
@@ -257,12 +288,25 @@ export function ConfigPage({ itemId }: { itemId: string }) {
                   >
                     Get Volume Discounts
                   </button>
-                  {hasBatches && (
-                    <span className="mb-2.5 text-[11px] text-slate-500">
-                      controlled by production batches below
-                    </span>
-                  )}
                 </div>
+
+                {errorVisible && (
+                  <div
+                    id="qty-error"
+                    role="alert"
+                    className="mt-2 flex items-start gap-1.5 rounded-md border border-red-200 bg-red-50 px-2.5 py-1.5 text-[12px] text-red-800"
+                  >
+                    <span aria-hidden="true">⚠</span>
+                    <span>
+                      Production batch quantities must add up to the total
+                      quantity ({draft.qty}). Currently {totalBatchQty} of{" "}
+                      {draft.qty}.{" "}
+                      {totalBatchQty < draft.qty
+                        ? `Add ${draft.qty - totalBatchQty} more.`
+                        : `Remove ${totalBatchQty - draft.qty}.`}
+                    </span>
+                  </div>
+                )}
 
                 <BatchesSection
                   draft={draft}
@@ -270,6 +314,7 @@ export function ConfigPage({ itemId }: { itemId: string }) {
                   addBatch={addBatch}
                   updateBatch={updateBatch}
                   removeBatch={removeBatch}
+                  errorVisible={errorVisible}
                 />
               </div>
 
@@ -461,12 +506,14 @@ function BatchesSection({
   addBatch,
   updateBatch,
   removeBatch,
+  errorVisible,
 }: {
   draft: Item;
   totalBatchQty: number;
   addBatch: () => void;
   updateBatch: (id: string, patch: Partial<Batch>) => void;
   removeBatch: (id: string) => void;
+  errorVisible?: boolean;
 }) {
   const hasBatches = draft.batches.length > 0;
   const sorted = sortBatches(draft.batches);
@@ -491,7 +538,12 @@ function BatchesSection({
   }
 
   return (
-    <div className="mt-3 rounded-md border border-slate-200 bg-white">
+    <div
+      className={
+        "mt-3 rounded-md border bg-white " +
+        (errorVisible ? "border-red-300" : "border-slate-200")
+      }
+    >
       <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2">
         <div className="flex items-center">
           <span className="text-[13px] font-semibold text-slate-800">
