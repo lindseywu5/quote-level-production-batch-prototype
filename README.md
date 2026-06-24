@@ -2,7 +2,7 @@
 
 Clickable Next.js prototype exploring how to express **production batches** at the line-item level of a Xometry quote — letting customers split a total quantity into smaller portions, each with its own requested ship or delivery date.
 
-- **Live:** https://quote-level-production-batch-prototype-axntxxkzy.vercel.app
+- **Live:** https://quote-batches.vercel.app
 - **Repo:** https://github.com/lindseywu5/quote-level-production-batch-prototype
 
 ## Run locally
