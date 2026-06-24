@@ -60,17 +60,41 @@ export function ConfigPage({ itemId }: { itemId: string }) {
 
   const setBatches = (next: Batch[]) => setDraft({ ...draft, batches: next });
 
-  const addBatch = () => {
-    const remaining = Math.max(1, draft.qty - totalBatchQty);
-    const newBatch: Batch = {
-      id: "b" + Math.random().toString(36).slice(2, 7),
-      qty: remaining,
-      dueDate: addDays(new Date(), 21 + draft.batches.length * 7),
-      dueType: "ship",
-      editing: true,
-    };
-    setBatches([...draft.batches, newBatch]);
+  /** Distribute `total` units across `count` batches as evenly as possible.
+   *  Any remainder is added 1-by-1 to the first `remainder` batches. */
+  const evenSplit = (total: number, count: number): number[] => {
+    if (count <= 0) return [];
+    const base = Math.floor(total / count);
+    const remainder = total - base * count;
+    return Array.from({ length: count }, (_, i) =>
+      Math.max(0, base + (i < remainder ? 1 : 0)),
+    );
   };
+
+  /** Add a batch and re-balance all batch quantities to be as even as possible. */
+  const addBatches = (howMany: number = 1) => {
+    const startCount = draft.batches.length;
+    const newCount = startCount + howMany;
+    const splits = evenSplit(draft.qty, newCount);
+    const today = new Date();
+    const next: Batch[] = Array.from({ length: newCount }, (_, i) => {
+      const existing = draft.batches[i];
+      return existing
+        ? { ...existing, qty: splits[i] }
+        : {
+            id: "b" + Math.random().toString(36).slice(2, 7),
+            qty: splits[i],
+            dueDate: addDays(today, 21 + i * 7),
+            dueType: "ship",
+            editing: true,
+          };
+    });
+    setBatches(next);
+  };
+
+  const addBatch = () => addBatches(1);
+  const startBatches = () => addBatches(2);
+
   const updateBatch = (id: string, patch: Partial<Batch>) =>
     setBatches(draft.batches.map((b) => (b.id === id ? { ...b, ...patch } : b)));
   const removeBatch = (id: string) =>
@@ -312,6 +336,7 @@ export function ConfigPage({ itemId }: { itemId: string }) {
                   draft={draft}
                   totalBatchQty={totalBatchQty}
                   addBatch={addBatch}
+                  startBatches={startBatches}
                   updateBatch={updateBatch}
                   removeBatch={removeBatch}
                   errorVisible={errorVisible}
@@ -504,6 +529,7 @@ function BatchesSection({
   draft,
   totalBatchQty,
   addBatch,
+  startBatches,
   updateBatch,
   removeBatch,
   errorVisible,
@@ -511,6 +537,7 @@ function BatchesSection({
   draft: Item;
   totalBatchQty: number;
   addBatch: () => void;
+  startBatches: () => void;
   updateBatch: (id: string, patch: Partial<Batch>) => void;
   removeBatch: (id: string) => void;
   errorVisible?: boolean;
@@ -523,7 +550,7 @@ function BatchesSection({
       <div className="mt-3 rounded-md border border-blue-100 bg-blue-50/70 px-3 py-2 text-[12px] text-blue-900">
         Need different dates for different quantities?{" "}
         <button
-          onClick={addBatch}
+          onClick={startBatches}
           className="font-semibold text-blue-700 hover:underline"
         >
           Split into production batches
@@ -560,7 +587,7 @@ function BatchesSection({
             <b>Delivery date</b> = the day it arrives at you.
           </Tip>
           <span className="ml-2 text-[12px] text-slate-500">
-            {draft.batches.length}/100 · sorted by earliest due date
+            {draft.batches.length}/100
           </span>
         </div>
         <button
